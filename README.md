@@ -172,7 +172,9 @@ Edit `config.json` or use Menu 5 (Parameters):
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+自定义许可：禁止商用，允许修改 / 二次开发 / 再分发（需注明原作者 jiuduyang），使用风险自负，本项目已停更。详见 [LICENSE](LICENSE)。
+
+Custom license: no commercial use; modification, re-development and redistribution allowed (must credit the original author jiuduyang); use at your own risk; the project is no longer maintained. See [LICENSE](LICENSE).
 
 ## Acknowledgments
 

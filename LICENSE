@@ -1,21 +1,34 @@
-MIT License
+MMCT 许可协议 (License)
 
-Copyright (c) 2026 jiuduyang
+版权所有 (c) 2026 jiuduyang（原作者）
+原仓库：https://github.com/jiuduyang-Color/MC-Chineselocalizationtool
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+本工具（MMCT — Minecraft 模组一键汉化工具，含源代码、二进制可执行文件及相关资源）依据以下条款授权：
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+一、授权范围
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+1. 允许任何人使用、运行、复制、学习本工具。
+2. 允许任何人修改本工具的源代码，或基于本工具进行二次开发、重新制作衍生作品。
+3. 允许任何人分发本工具（无论原版或修改版），但在分发时必须同时满足：
+   (1) 保留本许可协议全文；
+   (2) 注明原作者为 jiuduyang，并给出原仓库地址。
+
+二、商用禁止
+
+严禁将本工具（含源代码、二进制文件及任何基于本工具的衍生作品）用于任何商业目的。商业目的包括但不限于：销售、付费分发、付费下载、捆绑于商业产品或商业服务中提供、以盈利为目的的使用或分发。仅允许非商业用途。
+
+三、项目状态
+
+本工具制作完成即处于「已停更」状态，原作者不再提供功能更新、维护或技术支持。使用者可自行修改、二次开发与分发，相关风险与维护责任由修改者 / 使用者自行承担。
+
+四、免责声明
+
+本工具按「现状」（AS IS）提供，不提供任何明示或暗示的担保，包括但不限于对适销性、特定用途适用性、不侵权或不出错的担保。因使用、修改、分发本工具或无法使用本工具而产生的任何直接或间接后果（包括但不限于数据丢失、账号封禁、法律纠纷、第三方索赔及其他任何损失），原作者 jiuduyang 概不负责，由使用者 / 分发者自行承担全部风险与责任。
+
+五、商标
+
+Minecraft 是 Mojang Studios 的商标，本工具与 Mojang Studios、Microsoft 无任何关联、合作或赞助关系。本工具不分发 Minecraft 本体或其受版权保护的资源，仅用于处理用户自有的模组语言文件。
+
+六、条款效力
+
+本许可协议的任何条款如被认定为不可执行，不影响其余条款的效力。使用、修改或分发本工具即视为接受本协议全部条款。
