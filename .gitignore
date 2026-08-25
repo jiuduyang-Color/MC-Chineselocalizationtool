@@ -1,0 +1,27 @@
+# .NET
+bin/
+obj/
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+
+# IDE
+.vs/
+.idea/
+*.swp
+
+# Build output
+publish/_tmp/
+publish/*.exe
+publish/*.pdb
+publish/config.json
+publish/汉化包输出目录/
+publish/Localization_Output/
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Test results
+[Tt]est[Rr]esult*/

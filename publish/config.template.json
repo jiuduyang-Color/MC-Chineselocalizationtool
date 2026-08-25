@@ -1,0 +1,15 @@
+{
+  "apiBaseUrl": "https://api.deepseek.com",
+  "apiKey": "YOUR_API_KEY_HERE",
+  "model": "deepseek-chat",
+  "provider": "Auto",
+  "smartBatching": true,
+  "maxCharsPerBatch": 5000,
+  "concurrency": 4,
+  "compactPayload": true,
+  "gameVersion": "1.21.1",
+  "packDescription": "MMCT Chinese Localization Pack",
+  "requestTimeoutSeconds": 120,
+  "maxRetries": 3,
+  "curseForgeApiKey": ""
+}
