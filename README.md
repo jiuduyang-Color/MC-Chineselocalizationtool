@@ -31,6 +31,20 @@ MMCT（Minecraft Mod Chinese Translation Tool）是一个 Windows 命令行工�
 | **双语界面**      | 中文版 `MMCT_ZH.exe` + 英文版 `MMCT_EN.exe`，根据文件名自动切换语言                            |
 | **配置一览**      | 主菜单选项 6 可查看当前所有配置项的值（API Key 掩码显示）                                           |
 
+### 支持的 AI 服务
+
+工具支持多种 AI 翻译引擎，均通过 OpenAI 兼容接口调用。在 **菜单 3（AI 配置）** 中填入对应服务的 API 地址、Key 和模型名即可切换：
+
+| AI 服务 | API 地址 (apiBaseUrl) | 推荐模型 (model) | 获取 API Key |
+|---|---|---|---|
+| **DeepSeek**（推荐，便宜好用） | `https://api.deepseek.com` | `deepseek-chat` | [platform.deepseek.com](https://platform.deepseek.com/) 免费注册 |
+| **OpenAI** | `https://api.openai.com/v1` | `gpt-3.5-turbo` 或 `gpt-4o-mini` | [platform.openai.com](https://platform.openai.com/) |
+| **Claude (Anthropic)** | `https://api.anthropic.com` | `claude-3-5-sonnet-20241022` | [console.anthropic.com](https://console.anthropic.com/) |
+| **Gemini (Google)** | `https://generativelanguage.googleapis.com` | `gemini-1.5-flash` | [aistudio.google.com](https://aistudio.google.com/) |
+| **其他兼容服务** | 任意 OpenAI 兼容地址 | 对应模型名 | 对应平台获取 |
+
+> 💡 **推荐使用 DeepSeek**：翻译质量好、速度快、价格仅为 OpenAI 的 1/10 左右，是性价比最高的选择。
+
 ### 快速开始
 
 1. 下载 `MMCT_ZH.exe`（中文界面）或 `MMCT_EN.exe`（英文界面）
@@ -94,6 +108,20 @@ MMCT (Minecraft Mod Chinese Translation Tool) is a Windows command-line tool tha
 | **Pause / Cancel**             | Press `Space` to pause/resume, `ESC` for cancel confirmation during translation                                                                                            |
 | **Bilingual UI**               | `MMCT_ZH.exe` (Chinese) + `MMCT_EN.exe` (English) — auto-detected by filename                                                                                              |
 | **Config Overview**            | Menu option 6 shows all current config values (API keys masked)                                                                                                            |
+
+### Supported AI Services
+
+The tool supports multiple AI translation engines, all via OpenAI-compatible API. Go to **Menu 3 (AI Config)** and enter the service's API URL, Key, and model name to switch:
+
+| AI Service | API URL (apiBaseUrl) | Recommended Model | Get API Key |
+|---|---|---|---|
+| **DeepSeek** (recommended, cheap & good) | `https://api.deepseek.com` | `deepseek-chat` | [platform.deepseek.com](https://platform.deepseek.com/) free signup |
+| **OpenAI** | `https://api.openai.com/v1` | `gpt-3.5-turbo` or `gpt-4o-mini` | [platform.openai.com](https://platform.openai.com/) |
+| **Claude (Anthropic)** | `https://api.anthropic.com` | `claude-3-5-sonnet-20241022` | [console.anthropic.com](https://console.anthropic.com/) |
+| **Gemini (Google)** | `https://generativelanguage.googleapis.com` | `gemini-1.5-flash` | [aistudio.google.com](https://aistudio.google.com/) |
+| **Other compatible** | Any OpenAI-compatible URL | Corresponding model name | Get from the provider |
+
+> 💡 **DeepSeek recommended**: Good translation quality, fast, and costs about 1/10 of OpenAI — best value for money.
 
 ### Quick Start
 
