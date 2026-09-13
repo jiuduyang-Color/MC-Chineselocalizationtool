@@ -1,4 +1,6 @@
+using System.IO;
 using System.IO.Compression;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using MMCT.Core.Models;
@@ -29,18 +31,19 @@ public class ModScanner
             using var zip = ZipFile.OpenRead(jarPath);
             var langEntries = zip.Entries
                 .Where(e => !string.IsNullOrEmpty(e.FullName) &&
-                            Regex.IsMatch(e.FullName, @"assets[\\/][^\\/]+[\\/]lang[\\/][a-z]{2}_[a-z]{2}\.json$",
+                            Regex.IsMatch(e.FullName, @"assets[\\/][^\\/]+[\\/]lang[\\/][a-z]{2}_[a-z]{2}\.(json|lang)$",
                                 RegexOptions.IgnoreCase))
                 .ToList();
 
             var modIdSet = new HashSet<string>();
             foreach (var entry in langEntries)
             {
-                var match = Regex.Match(entry.FullName, @"assets[\\/]([^\\/]+)[\\/]lang[\\/]([a-z]{2}_[a-z]{2})\.json$", RegexOptions.IgnoreCase);
+                var match = Regex.Match(entry.FullName, @"assets[\\/]([^\\/]+)[\\/]lang[\\/]([a-z]{2}_[a-z]{2})\.(json|lang)$", RegexOptions.IgnoreCase);
                 if (match.Success)
                 {
                     var modId = match.Groups[1].Value;
                     var langCode = match.Groups[2].Value.ToLowerInvariant();
+                    var ext = match.Groups[3].Value.ToLowerInvariant();
                     modIdSet.Add(modId);
                     mod.LanguageFiles[langCode] = entry.FullName;
 
@@ -49,11 +52,12 @@ public class ModScanner
 
                     if (extractContent && langCode == "en_us")
                     {
+                        mod.LanguageFormat = ext == "lang" ? LanguageFileFormat.Lang : LanguageFileFormat.Json;
                         try
                         {
                             using var sr = new StreamReader(entry.Open());
                             mod.EnUsContent = sr.ReadToEnd();
-                            mod.EnUsDict = ParseLanguageFile(mod.EnUsContent);
+                            mod.EnUsDict = ParseLanguageFile(mod.EnUsContent, mod.LanguageFormat);
                         }
                         catch
                         {
@@ -81,7 +85,19 @@ public class ModScanner
         }
     }
 
-    private static Dictionary<string, string>? ParseLanguageFile(string content)
+    public static Dictionary<string, string>? ParseLanguageFile(string content, LanguageFileFormat format)
+    {
+        return format == LanguageFileFormat.Lang ? ParseLangFile(content) : ParseJsonFile(content);
+    }
+
+    public static LanguageFileFormat DetectFormatFromPath(string path)
+    {
+        return path.EndsWith(".lang", StringComparison.OrdinalIgnoreCase)
+            ? LanguageFileFormat.Lang
+            : LanguageFileFormat.Json;
+    }
+
+    private static Dictionary<string, string>? ParseJsonFile(string content)
     {
         try
         {
@@ -102,6 +118,40 @@ public class ModScanner
         {
             return null;
         }
+    }
+
+    private static Dictionary<string, string>? ParseLangFile(string content)
+    {
+        try
+        {
+            var result = new Dictionary<string, string>(StringComparer.Ordinal);
+            using var sr = new StringReader(content);
+            while (sr.ReadLine() is { } line)
+            {
+                var trimmed = line.Trim();
+                if (trimmed.Length == 0 || trimmed[0] == '#') continue;
+                var eq = line.IndexOf('=');
+                if (eq <= 0) continue;
+                var key = line[..eq].Trim();
+                var val = line[(eq + 1)..];
+                if (string.IsNullOrWhiteSpace(val)) continue;
+                if (key.Length > 0)
+                    result[key] = val;
+            }
+            return result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    public static string SerializeLangFile(Dictionary<string, string> dict)
+    {
+        var sb = new StringBuilder();
+        foreach (var (k, v) in dict)
+            sb.Append(k).Append('=').Append(v).Append('\n');
+        return sb.ToString();
     }
 
     public string? GetModsDirectoryFromVersionFolder(string versionFolder)

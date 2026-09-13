@@ -88,7 +88,8 @@ internal static class Program
             Console.WriteLine(I18n.T("Mode4"));
             Console.WriteLine(I18n.T("Mode5"));
             Console.WriteLine(I18n.T("Mode6"));
-            Console.WriteLine(I18n.T("Mode0"));
+        Console.WriteLine(I18n.T("Mode7"));
+        Console.WriteLine(I18n.T("Mode0"));
             Console.Write(I18n.T("EnterChoice"));
 
             var input = Console.ReadLine()?.Trim();
@@ -102,6 +103,7 @@ internal static class Program
                     case "4": RunPackMenu(); break;
                     case "5": RunParamMenu(); break;
                     case "6": RunConfigOverview(); break;
+                    case "7": RunModeSeven(); break;
                     case "0":
                         Console.WriteLine(I18n.T("ExitMsg"));
                         return 0;
@@ -682,6 +684,220 @@ internal static class Program
         public static readonly ReferenceEqualityComparer Instance = new();
         public bool Equals(ModInfo? x, ModInfo? y) => ReferenceEquals(x, y);
         public int GetHashCode(ModInfo obj) => System.Runtime.CompilerServices.RuntimeHelpers.GetHashCode(obj);
+    }
+
+    // --- Mode 7: Single language file ---
+    private static void RunModeSeven()
+    {
+        ReloadConfig();
+        Console.Clear();
+        PrintHeader();
+        Console.WriteLine(I18n.T("Mode7Title"));
+        Console.Write(I18n.T("PromptLangFilePath"));
+        var path = CleanInputPath(Console.ReadLine());
+        if (string.IsNullOrEmpty(path))
+        {
+            Console.WriteLine(I18n.T("PathNotFound"));
+            Pause();
+            return;
+        }
+
+        // Collect language file paths (single file or directory of .json/.lang)
+        var files = new List<string>();
+        if (File.Exists(path))
+        {
+            var ext = Path.GetExtension(path);
+            if (ext.Equals(".json", StringComparison.OrdinalIgnoreCase) ||
+                ext.Equals(".lang", StringComparison.OrdinalIgnoreCase))
+                files.Add(path);
+            else
+            {
+                Console.WriteLine(I18n.T("PathNotFound"));
+                Pause();
+                return;
+            }
+        }
+        else if (Directory.Exists(path))
+        {
+            files.AddRange(Directory.EnumerateFiles(path, "*.json", SearchOption.AllDirectories));
+            files.AddRange(Directory.EnumerateFiles(path, "*.lang", SearchOption.AllDirectories));
+        }
+        else
+        {
+            Console.WriteLine(I18n.T("PathNotFound"));
+            Pause();
+            return;
+        }
+
+        if (files.Count == 0)
+        {
+            Console.WriteLine(I18n.T("FoundLangFile", 0));
+            Pause();
+            return;
+        }
+
+        Console.WriteLine(I18n.T("FoundLangFile", files.Count));
+
+        // Parse each file into a temp ModInfo, preserving source format
+        var mods = new List<ModInfo>();
+        foreach (var f in files)
+        {
+            try
+            {
+                var fmt = ModScanner.DetectFormatFromPath(f);
+                var content = File.ReadAllText(f);
+                var dict = ModScanner.ParseLanguageFile(content, fmt);
+                if (dict == null || dict.Count == 0)
+                {
+                    Console.WriteLine(I18n.T("NoLangKeys", Path.GetFileName(f)));
+                    continue;
+                }
+                var name = Path.GetFileNameWithoutExtension(f);
+                mods.Add(new ModInfo
+                {
+                    JarPath = f,
+                    ModName = name,
+                    ModId = name.ToLowerInvariant(),
+                    EnUsContent = content,
+                    EnUsDict = dict,
+                    LanguageFormat = fmt
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(I18n.T("GenericError", Path.GetFileName(f) + ": " + ex.Message));
+            }
+        }
+
+        if (mods.Count == 0)
+        {
+            Pause();
+            return;
+        }
+
+        var translations = DoTranslateMods(mods);
+        if (translations.Count == 0)
+        {
+            Console.WriteLine(I18n.T("NoTranslatedMods"));
+            Pause();
+            return;
+        }
+
+        // Output sub-menu: pack / export lang files
+        while (true)
+        {
+            Console.WriteLine(I18n.T("OutputModeTitle"));
+            Console.WriteLine(I18n.T("OutputPack"));
+            Console.WriteLine(I18n.T("OutputJson"));
+            Console.WriteLine(I18n.T("OutputBack"));
+            Console.Write(I18n.T("EnterChoice"));
+            var c = Console.ReadLine()?.Trim();
+            if (c == "0") break;
+
+            if (c == "1")
+            {
+                // Ask output format
+                var fmtChoice = AskOutputFormat();
+                if (fmtChoice == null) continue;
+                try
+                {
+                    var outDir = Path.Combine(_baseDir, I18n.T("OutputDirName"));
+                    Directory.CreateDirectory(outDir);
+                    var ts = DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                    var outZip = Path.Combine(outDir, $"MMCT_Lang_Pack_{ts}.zip");
+                    var icon = _packBuilder.FindIconInFolder(_baseDir);
+
+                    // "both" -> build two zips
+                    var formats = fmtChoice == "both"
+                        ? new[] { LanguageFileFormat.Lang, LanguageFileFormat.Json }
+                        : new[] { fmtChoice == "lang" ? LanguageFileFormat.Lang : LanguageFileFormat.Json };
+
+                    foreach (var fmt in formats)
+                    {
+                        var zipPath = formats.Length == 1
+                            ? outZip
+                            : Path.Combine(outDir,
+                                $"MMCT_Lang_Pack_{ts}_{(fmt == LanguageFileFormat.Lang ? "lang" : "json")}.zip");
+                        _packBuilder.BuildResourcePack(new ResourcePackBuilder.PackBuildOptions
+                        {
+                            OutputPath = zipPath,
+                            GameVersion = _config.GameVersion,
+                            Description = _config.PackDescription,
+                            IconPath = icon,
+                            Translations = translations,
+                            OutputFormatOverride = fmt
+                        });
+                        Console.WriteLine(I18n.T("PackBuilt", zipPath));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(I18n.T("GenericError", ex.Message));
+                }
+                Pause();
+                break;
+            }
+            if (c == "2")
+            {
+                var fmtChoice = AskOutputFormat();
+                if (fmtChoice == null) continue;
+                try
+                {
+                    var outDir = Path.Combine(_baseDir, I18n.T("OutputDirName"));
+                    Directory.CreateDirectory(outDir);
+
+                    if (fmtChoice == "both")
+                    {
+                        var langDir = Path.Combine(outDir, "lang");
+                        var jsonDir = Path.Combine(outDir, "json");
+                        Directory.CreateDirectory(langDir);
+                        Directory.CreateDirectory(jsonDir);
+                        _packBuilder.ExportZhCnFiles(langDir, translations, LanguageFileFormat.Lang);
+                        _packBuilder.ExportZhCnFiles(jsonDir, translations, LanguageFileFormat.Json);
+                        Console.WriteLine(I18n.T("ExportedLangFiles", translations.Count * 2, "lang+json", outDir));
+                    }
+                    else
+                    {
+                        var fmt = fmtChoice == "lang" ? LanguageFileFormat.Lang : LanguageFileFormat.Json;
+                        _packBuilder.ExportZhCnFiles(outDir, translations, fmt);
+                        Console.WriteLine(I18n.T("ExportedLangFiles",
+                            translations.Count, fmtChoice, outDir));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(I18n.T("GenericError", ex.Message));
+                }
+                Pause();
+                break;
+            }
+            Console.WriteLine(I18n.T("InvalidChoice"));
+        }
+    }
+
+    /// <summary>Returns "lang" / "json" / "both", or null if user chose back.</summary>
+    private static string? AskOutputFormat()
+    {
+        while (true)
+        {
+            Console.WriteLine(I18n.T("OutputFormatTitle"));
+            Console.WriteLine(I18n.T("OutputFmtLang"));
+            Console.WriteLine(I18n.T("OutputFmtJson"));
+            Console.WriteLine(I18n.T("OutputFmtBoth"));
+            Console.WriteLine(I18n.T("OutputBack"));
+            Console.Write(I18n.T("EnterChoice"));
+            var c = Console.ReadLine()?.Trim();
+            switch (c)
+            {
+                case "1": return "lang";
+                case "2": return "json";
+                case "3": return "both";
+                case "0": return null;
+                default:
+                    Console.WriteLine(I18n.T("InvalidChoice"));
+                    continue;
+            }
+        }
     }
 
     // --- API menu ---

@@ -25,6 +25,7 @@ public static class I18n
         { "Mode4", "4. 资源包自定义设置" },
         { "Mode5", "5. 翻译参数配置" },
         { "Mode6", "6. 查看当前全部配置" },
+        { "Mode7", "7. 单独语言文件汉化 (.json / .lang)" },
         { "Mode0", "0. 退出程序" },
         { "EnterChoice", "请输入选项编号并回车: " },
         { "InvalidChoice", "无效选项，请重新输入。" },
@@ -171,6 +172,16 @@ public static class I18n
         { "GenericWarn", "警告: {0}" },
         { "GenericInfo", "提示: {0}" },
         { "Done", "完成。" },
+
+        { "Mode7Title", "===== 单独语言文件汉化模式 =====" },
+        { "PromptLangFilePath", "请输入或拖拽 .json 或 .lang 文件路径，或包含多个语言文件的文件夹路径: " },
+        { "FoundLangFile", "识别到 {0} 个语言文件。" },
+        { "NoLangKeys", "文件内未找到可翻译条目: {0}" },
+        { "OutputFormatTitle", "===== 选择输出格式 =====" },
+        { "OutputFmtLang", "1. 输出 .lang 格式" },
+        { "OutputFmtJson", "2. 输出 .json 格式" },
+        { "OutputFmtBoth", "3. 两者都输出" },
+        { "ExportedLangFiles", "已导出 {0} 个语言文件 ({1}) 至: {2}" },
     };
 
     private static readonly Dictionary<string, string> _en = new()
@@ -185,6 +196,7 @@ public static class I18n
         { "Mode4", "4. Resource Pack Customization" },
         { "Mode5", "5. Translation Parameter Settings" },
         { "Mode6", "6. View Current Configuration" },
+        { "Mode7", "7. Single Language File Localization (.json / .lang)" },
         { "Mode0", "0. Exit" },
         { "EnterChoice", "Enter option number: " },
         { "InvalidChoice", "Invalid option, try again." },
@@ -322,6 +334,16 @@ public static class I18n
         { "GenericWarn", "Warning: {0}" },
         { "GenericInfo", "Info: {0}" },
         { "Done", "Done." },
+
+        { "Mode7Title", "===== Single Language File Localization Mode =====" },
+        { "PromptLangFilePath", "Enter or drag-drop a .json or .lang file path, or a folder of language files: " },
+        { "FoundLangFile", "Detected {0} language file(s)." },
+        { "NoLangKeys", "No translatable entries found in file: {0}" },
+        { "OutputFormatTitle", "===== Choose Output Format =====" },
+        { "OutputFmtLang", "1. Output .lang format" },
+        { "OutputFmtJson", "2. Output .json format" },
+        { "OutputFmtBoth", "3. Output both" },
+        { "ExportedLangFiles", "Exported {0} language file(s) ({1}) to: {2}" },
     };
 
     public static string T(string key, params object[] args)

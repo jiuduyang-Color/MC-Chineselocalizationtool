@@ -1,5 +1,11 @@
 namespace MMCT.Core.Models;
 
+public enum LanguageFileFormat
+{
+    Json,
+    Lang
+}
+
 public class ModInfo
 {
     public string JarPath { get; set; } = "";
@@ -10,4 +16,5 @@ public class ModInfo
     public string? EnUsContent { get; set; }
     public Dictionary<string, string>? EnUsDict { get; set; }
     public Dictionary<string, string>? ZhCnDict { get; set; }
+    public LanguageFileFormat LanguageFormat { get; set; } = LanguageFileFormat.Json;
 }

@@ -14,6 +14,7 @@ public class ResourcePackBuilder
         public string Description { get; set; } = "MMCT Auto-Translation Pack";
         public string? IconPath { get; set; }
         public List<(ModInfo mod, Dictionary<string, string> zhCnDict)> Translations { get; set; } = new();
+        public LanguageFileFormat? OutputFormatOverride { get; set; }
     }
 
     public void BuildResourcePack(PackBuildOptions options)
@@ -54,6 +55,7 @@ public class ResourcePackBuilder
         }
 
         var grouped = new Dictionary<string, Dictionary<string, string>>();
+        var modIdFormats = new Dictionary<string, LanguageFileFormat>(StringComparer.Ordinal);
         var vanillaPrefixes = new HashSet<string>(StringComparer.Ordinal)
         {
             "block","item","entity","fluid","effect","enchantment","advancement","biome",
@@ -101,6 +103,8 @@ public class ResourcePackBuilder
                     modId = defaultModId;
                 }
 
+                if (!modIdFormats.ContainsKey(modId))
+                    modIdFormats[modId] = mod.LanguageFormat;
                 if (!grouped.ContainsKey(modId))
                     grouped[modId] = new Dictionary<string, string>(StringComparer.Ordinal);
                 grouped[modId][key] = value;
@@ -109,13 +113,18 @@ public class ResourcePackBuilder
 
         foreach (var (modId, langDict) in grouped)
         {
-            var path = $"assets/{modId}/lang/zh_cn.json";
-            var langJson = JsonSerializer.Serialize(langDict, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            });
-            WriteEntry(archive, path, langJson);
+            var fmt = options.OutputFormatOverride
+                ?? (modIdFormats.TryGetValue(modId, out var f) ? f : LanguageFileFormat.Json);
+            var ext = fmt == LanguageFileFormat.Lang ? "lang" : "json";
+            var path = $"assets/{modId}/lang/zh_cn.{ext}";
+            var content = fmt == LanguageFileFormat.Lang
+                ? ModScanner.SerializeLangFile(langDict)
+                : JsonSerializer.Serialize(langDict, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
+            WriteEntry(archive, path, content);
         }
     }
 
@@ -138,33 +147,41 @@ public class ResourcePackBuilder
         writer.Write(content);
     }
 
-    public void ExportZhCnFiles(string outputDir, List<(ModInfo mod, Dictionary<string, string> zhCnDict)> translations)
+    public void ExportZhCnFiles(string outputDir, List<(ModInfo mod, Dictionary<string, string> zhCnDict)> translations, LanguageFileFormat? overrideFormat = null)
     {
         if (!Directory.Exists(outputDir))
             Directory.CreateDirectory(outputDir);
 
         var grouped = new Dictionary<string, Dictionary<string, string>>();
+        var groupedFormat = new Dictionary<string, LanguageFileFormat>(StringComparer.Ordinal);
         foreach (var (mod, dict) in translations)
         {
             var modId = string.IsNullOrEmpty(mod.ModId) || mod.ModId.Contains('|')
                 ? Path.GetFileNameWithoutExtension(mod.JarPath)
                 : mod.ModId;
             if (!grouped.ContainsKey(modId))
+            {
                 grouped[modId] = new Dictionary<string, string>(StringComparer.Ordinal);
+                groupedFormat[modId] = mod.LanguageFormat;
+            }
             foreach (var (k, v) in dict)
                 grouped[modId][k] = v;
         }
 
         foreach (var (modId, langDict) in grouped)
         {
+            var fmt = overrideFormat ?? groupedFormat[modId];
+            var ext = fmt == LanguageFileFormat.Lang ? "lang" : "json";
             var safeName = string.Join("_", modId.Split(Path.GetInvalidFileNameChars()));
-            var filePath = Path.Combine(outputDir, $"{safeName}_zh_cn.json");
-            var json = JsonSerializer.Serialize(langDict, new JsonSerializerOptions
-            {
-                WriteIndented = true,
-                Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
-            });
-            File.WriteAllText(filePath, json, new UTF8Encoding(false));
+            var filePath = Path.Combine(outputDir, $"{safeName}_zh_cn.{ext}");
+            var content = fmt == LanguageFileFormat.Lang
+                ? ModScanner.SerializeLangFile(langDict)
+                : JsonSerializer.Serialize(langDict, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                });
+            File.WriteAllText(filePath, content, new UTF8Encoding(false));
         }
     }
 

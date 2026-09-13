@@ -150,4 +150,79 @@ public class ModScannerTests : IDisposable
         Assert.Equal(2, reports.Count);
         Assert.All(reports, r => Assert.Equal(2, r.t));
     }
+
+    [Fact]
+    public void ParseLanguageFile_LangFormat_ParsesKeyValuePairs()
+    {
+        var content = "# comment line\nitem.mymod.foo.name=Foo Item\n\nitem.mymod.foo.tooltip=A cool item\n";
+        var dict = ModScanner.ParseLanguageFile(content, LanguageFileFormat.Lang);
+        Assert.NotNull(dict);
+        Assert.Equal(2, dict!.Count);
+        Assert.Equal("Foo Item", dict["item.mymod.foo.name"]);
+        Assert.Equal("A cool item", dict["item.mymod.foo.tooltip"]);
+    }
+
+    [Fact]
+    public void ParseLanguageFile_LangFormat_SkipsCommentsAndBlanks()
+    {
+        var content = "# header comment\n\n   # indented comment\nkey.one=Value One\n";
+        var dict = ModScanner.ParseLanguageFile(content, LanguageFileFormat.Lang);
+        Assert.NotNull(dict);
+        Assert.Single(dict!);
+        Assert.Equal("Value One", dict!["key.one"]);
+    }
+
+    [Fact]
+    public void ParseLanguageFile_LangFormat_HandlesEqualsInValue()
+    {
+        // value may contain '='; only first '=' splits key/value
+        var content = "key.with=equals=sign\n";
+        var dict = ModScanner.ParseLanguageFile(content, LanguageFileFormat.Lang);
+        Assert.NotNull(dict);
+        Assert.Equal("equals=sign", dict!["key.with"]);
+    }
+
+    [Fact]
+    public void SerializeLangFile_RoundTripsKeysAndValues()
+    {
+        var original = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "item.foo.name", "Foo" },
+            { "item.bar.tooltip", "Bar tooltip" }
+        };
+        var serialized = ModScanner.SerializeLangFile(original);
+        var reparsed = ModScanner.ParseLanguageFile(serialized, LanguageFileFormat.Lang);
+        Assert.NotNull(reparsed);
+        Assert.Equal(2, reparsed!.Count);
+        Assert.Equal("Foo", reparsed["item.foo.name"]);
+        Assert.Equal("Bar tooltip", reparsed["item.bar.tooltip"]);
+    }
+
+    [Fact]
+    public void DetectFormatFromPath_LangExtension_ReturnsLang()
+    {
+        Assert.Equal(LanguageFileFormat.Lang, ModScanner.DetectFormatFromPath("/tmp/en_us.lang"));
+        Assert.Equal(LanguageFileFormat.Json, ModScanner.DetectFormatFromPath("/tmp/en_us.json"));
+    }
+
+    [Fact]
+    public void ScanMod_JarWithEnUsLang_ExtractsAndSetsLangFormat()
+    {
+        var jar = Path.Combine(_tempDir, "oldmod.jar");
+        using (var fs = File.Create(jar))
+        using (var zip = new ZipArchive(fs, ZipArchiveMode.Create))
+        {
+            var entry = zip.CreateEntry("assets/oldmod/lang/en_us.lang");
+            using var s = entry.Open();
+            using var w = new StreamWriter(s, new UTF8Encoding(false));
+            w.Write("# old format\noldmod.item.name=Old Item\noldmod.item.tooltip=A thing\n");
+        }
+
+        var mod = _scanner.ScanMod(jar);
+        Assert.NotNull(mod);
+        Assert.Equal(LanguageFileFormat.Lang, mod!.LanguageFormat);
+        Assert.NotNull(mod.EnUsDict);
+        Assert.Equal(2, mod.EnUsDict!.Count);
+        Assert.Equal("Old Item", mod.EnUsDict["oldmod.item.name"]);
+    }
 }

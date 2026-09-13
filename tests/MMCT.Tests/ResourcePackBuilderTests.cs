@@ -132,4 +132,92 @@ public class ResourcePackBuilderTests : IDisposable
         var found = _builder.FindIconInFolder(_tempDir);
         Assert.Equal(p, found);
     }
+
+    [Fact]
+    public void BuildResourcePack_LangSourceOverrideNull_OutputsLangFile()
+    {
+        var zipPath = Path.Combine(_tempDir, "lang_src.zip");
+        var mod = new ModInfo
+        {
+            JarPath = Path.Combine(_tempDir, "oldmod.jar"),
+            ModId = "oldmod",
+            ModName = "OldMod",
+            LanguageFormat = LanguageFileFormat.Lang
+        };
+        var dict = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "oldmod.item.name", "旧物品" }
+        };
+
+        _builder.BuildResourcePack(new ResourcePackBuilder.PackBuildOptions
+        {
+            OutputPath = zipPath,
+            GameVersion = "1.20.1",
+            Translations = new List<(ModInfo, Dictionary<string, string>)> { (mod, dict) }
+            // OutputFormatOverride = null -> follows mod.LanguageFormat = Lang
+        });
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        var langEntry = archive.GetEntry("assets/oldmod/lang/zh_cn.lang");
+        Assert.NotNull(langEntry);
+        using var sr = new StreamReader(langEntry!.Open());
+        var content = sr.ReadToEnd();
+        Assert.Contains("oldmod.item.name=旧物品", content);
+        // no zh_cn.json should exist for this mod when source is lang
+        Assert.Null(archive.GetEntry("assets/oldmod/lang/zh_cn.json"));
+    }
+
+    [Fact]
+    public void BuildResourcePack_OverrideJson_OutputsJsonEvenForLangSource()
+    {
+        var zipPath = Path.Combine(_tempDir, "force_json.zip");
+        var mod = new ModInfo
+        {
+            JarPath = Path.Combine(_tempDir, "oldmod.jar"),
+            ModId = "oldmod",
+            ModName = "OldMod",
+            LanguageFormat = LanguageFileFormat.Lang
+        };
+        var dict = new Dictionary<string, string>(StringComparer.Ordinal)
+        {
+            { "oldmod.item.name", "旧物品" }
+        };
+
+        _builder.BuildResourcePack(new ResourcePackBuilder.PackBuildOptions
+        {
+            OutputPath = zipPath,
+            GameVersion = "1.20.1",
+            Translations = new List<(ModInfo, Dictionary<string, string>)> { (mod, dict) },
+            OutputFormatOverride = LanguageFileFormat.Json
+        });
+
+        using var archive = ZipFile.OpenRead(zipPath);
+        Assert.NotNull(archive.GetEntry("assets/oldmod/lang/zh_cn.json"));
+        Assert.Null(archive.GetEntry("assets/oldmod/lang/zh_cn.lang"));
+    }
+
+    [Fact]
+    public void ExportZhCnFiles_OverrideLang_OutputsLangExtension()
+    {
+        var outDir = Path.Combine(_tempDir, "exports_lang");
+        var mod = new ModInfo
+        {
+            JarPath = Path.Combine(_tempDir, "mod.jar"),
+            ModId = "modA",
+            ModName = "A",
+            LanguageFormat = LanguageFileFormat.Json // source json, override to lang
+        };
+        var translations = new List<(ModInfo, Dictionary<string, string>)>
+        {
+            (mod, new Dictionary<string, string>(StringComparer.Ordinal) { { "modA.x", "X" } })
+        };
+
+        _builder.ExportZhCnFiles(outDir, translations, LanguageFileFormat.Lang);
+
+        var files = Directory.GetFiles(outDir).ToList();
+        Assert.Single(files);
+        Assert.EndsWith("_zh_cn.lang", files[0]);
+        var content = File.ReadAllText(files[0]);
+        Assert.Contains("modA.x=X", content);
+    }
 }
